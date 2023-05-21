@@ -1,6 +1,6 @@
 [package]
 name = "opzioni"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Aurelio Buonomo"]
 description = "A slim and fast configuration library for Rust"
@@ -12,7 +12,6 @@ categories = ["config"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-thiserror = "1.0.40"
 serde = { version = "1.0.130", features = ["derive"] }
 serde_json = { version = "1.0.64", optional = true }
 serde_yaml = { version = "0.9.21", optional = true }
