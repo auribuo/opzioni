@@ -1,4 +1,4 @@
-//! kosei is a strongly typed configuration library for Rust.
+//! opzioni is a strongly typed configuration library for Rust.
 //! It is designed to be easy to use and to provide a good user experience.
 //! It uses serde for serialization and deserialization.
 //! The currently supported formats are JSON, TOML and YAML.
@@ -93,7 +93,7 @@ where
     ///
     /// # Example
     /// ```
-    /// use kosei::Config;
+    /// use opzioni::Config;
     /// use serde::{Serialize, Deserialize};
     ///
     /// #[derive(Serialize, Deserialize, Default)]
@@ -117,7 +117,7 @@ where
     ///
     /// # Example
     /// ```
-    /// use kosei::Config;
+    /// use opzioni::Config;
     /// use serde::{Serialize, Deserialize};
     /// use std::sync::RwLock;
     ///
@@ -141,7 +141,7 @@ where
     ///
     /// # Example
     /// ```
-    /// use kosei::Config;
+    /// use opzioni::Config;
     /// use serde::{Serialize, Deserialize};
     /// use std::path::Path;
     ///
@@ -168,7 +168,7 @@ where
     ///
     /// # Example
     /// ```
-    /// use kosei::Config;
+    /// use opzioni::Config;
     /// use serde::{Serialize, Deserialize};
     /// use std::path::Path;
     ///
@@ -218,7 +218,7 @@ impl ConfigBuilder {
     ///
     /// # Example
     /// ```
-    /// use kosei::Config;
+    /// use opzioni::Config;
     /// use serde::{Serialize, Deserialize};
     /// use std::path::Path;
     ///
@@ -251,7 +251,7 @@ impl ConfigBuilder {
     ///
     /// # Example
     /// ```
-    /// use kosei::Config;
+    /// use opzioni::Config;
     /// use serde::{Serialize, Deserialize};
     /// use std::path::Path;
     ///

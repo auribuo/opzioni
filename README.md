@@ -1,4 +1,4 @@
-# ⚙️ kosei
+# ⚙️ opzioni
 
 A simple and fast configuration library for Rust.
 
@@ -6,14 +6,14 @@ A simple and fast configuration library for Rust.
 
 Add the library to your project via cargo:
 
-`cargo add kosei`
+`cargo add opzioni`
 
 ## Features
 By default all features are enabled. This allows to work with JSON, TOML and YAML configs.
 
 If you want to only use a subset run:
 
-`cargo add kosei --no-default-features --features json`
+`cargo add opzioni --no-default-features --features json`
 
 Replace json with the features you want to enable.
 The available features are
@@ -36,13 +36,13 @@ struct MyConfig {
 }
 ```
 
-Then just load the config file using kosei:
+Then just load the config file using opzioni:
 
 ```rust
-let config = kosei::Config::<MyConfig>::configure().load(std::path::Path::new("myconfig.yml")).unwrap();
+let config = opzioni::Config::<MyConfig>::configure().load(std::path::Path::new("myconfig.yml")).unwrap();
 ```
 
-kosei exposes a `RwLock` which can be used to modify the config data:
+opzioni exposes a `RwLock` which can be used to modify the config data:
 
 ```rust
 let lock = config.get();
