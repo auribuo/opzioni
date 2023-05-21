@@ -49,17 +49,21 @@ mod json {
         T: serde::Serialize + serde::de::DeserializeOwned + Default,
     {
         fn load(&self) -> Result<T, super::Error> {
+            #[cfg(feature = "tracing")]
             trace!(file = ?self.path, "loading config");
             let data = std::fs::read_to_string(&self.path)?;
             let config: T = serde_json::from_str(&data)?;
+            #[cfg(feature = "tracing")]
             debug!(file = ?self.path, config = data, "loaded config");
             Ok(config)
         }
 
         fn save(&self, config: &T) -> Result<(), super::Error> {
+            #[cfg(feature = "tracing")]
             trace!(file = ?self.path, "saving config");
             let data = serde_json::to_string_pretty(config)?;
             std::fs::write(&self.path, &data)?;
+            #[cfg(feature = "tracing")]
             debug!(file = ?self.path, config = data, "saved config");
             Ok(())
         }
@@ -85,17 +89,21 @@ mod toml {
         T: serde::Serialize + serde::de::DeserializeOwned + Default,
     {
         fn load(&self) -> Result<T, super::Error> {
+            #[cfg(feature = "tracing")]
             trace!(file = ?self.path, "loading config");
             let data = std::fs::read_to_string(&self.path)?;
             let config: T = toml::from_str(&data)?;
+            #[cfg(feature = "tracing")]
             debug!(file = ?self.path, config = data, "loaded config");
             Ok(config)
         }
 
         fn save(&self, config: &T) -> Result<(), super::Error> {
+            #[cfg(feature = "tracing")]
             trace!(file = ?self.path, "saving config");
             let data = toml::to_string_pretty(config)?;
             std::fs::write(&self.path, &data)?;
+            #[cfg(feature = "tracing")]
             debug!(file = ?self.path, config = data, "saved config");
             Ok(())
         }
@@ -121,17 +129,21 @@ mod yaml {
         T: serde::Serialize + serde::de::DeserializeOwned + Default,
     {
         fn load(&self) -> Result<T, super::Error> {
+            #[cfg(feature = "tracing")]
             trace!(file = ?self.path, "loading config");
             let data = std::fs::read_to_string(&self.path)?;
             let config: T = serde_yaml::from_str(&data)?;
+            #[cfg(feature = "tracing")]
             debug!(file = ?self.path, config = data, "loaded config");
             Ok(config)
         }
 
         fn save(&self, config: &T) -> Result<(), super::Error> {
+            #[cfg(feature = "tracing")]
             trace!(file = ?self.path, "saving config");
             let data = serde_yaml::to_string(config)?;
             std::fs::write(&self.path, &data)?;
+            #[cfg(feature = "tracing")]
             debug!(file = ?self.path, config = data, "saved config");
             Ok(())
         }

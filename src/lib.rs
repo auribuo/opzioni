@@ -12,6 +12,7 @@ use std::{
 
 mod manager;
 
+#[cfg(feature = "tracing")]
 #[macro_use]
 extern crate tracing;
 
@@ -105,7 +106,8 @@ where
     /// let config = Config::<MyConfig>::empty();
     /// ```
     pub fn empty() -> Self {
-        trace!("created config with default values");
+        #[cfg(feature = "tracing")]
+        trace!("created empty config");
         Self {
             config: RwLock::new(T::default()),
             path: None,
@@ -207,6 +209,11 @@ impl ConfigBuilder {
         if !self.use_default_on_error {
             return Err(err);
         }
+        #[cfg(feature = "tracing")]
+        trace!(
+            error = err.to_string(),
+            "using default config because of error"
+        );
         return Ok(Config {
             config: RwLock::new(T::default()),
             path: Some(path.to_path_buf()),

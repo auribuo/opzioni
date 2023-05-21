@@ -22,6 +22,8 @@ The available features are
 - yaml
 - toml
 
+You can also enable logs via the tracing crate using the `tracing` feature. This feature is disabled by default 
+
 # Usage
 
 First create a struct implementing `Serialize`, `Deserialize` and `Default`
