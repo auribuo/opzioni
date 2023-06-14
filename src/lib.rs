@@ -7,7 +7,6 @@
 use std::{
     fmt::Display,
     path::{self, Path},
-    sync::RwLock,
 };
 
 mod manager;
@@ -15,6 +14,12 @@ mod manager;
 #[cfg(feature = "tracing")]
 #[macro_use]
 extern crate tracing;
+
+#[cfg(not(feature = "tokio"))]
+type Lock<T> = std::sync::RwLock<T>;
+
+#[cfg(feature = "tokio")]
+type Lock<T> = tokio::sync::RwLock<T>;
 
 /// The Error enum contains all possible errors that can occur while loading or saving a config file.
 #[derive(Debug)]
@@ -78,15 +83,15 @@ impl Display for Error {
 #[derive(Debug, Default)]
 pub struct Config<T>
 where
-    T: serde::Serialize + serde::de::DeserializeOwned + Default,
+    T: serde::Serialize + serde::de::DeserializeOwned + Default + Clone + Send + Sync,
 {
-    config: RwLock<T>,
+    config: Lock<T>,
     path: Option<path::PathBuf>,
 }
 
 impl<T> Config<T>
 where
-    T: serde::Serialize + serde::de::DeserializeOwned + Default,
+    T: serde::Serialize + serde::de::DeserializeOwned + Default + Clone + Send + Sync,
 {
     /// Creates a new Config struct.
     /// The config struct uses the default values of the given type T.
@@ -97,7 +102,7 @@ where
     /// use opzioni::Config;
     /// use serde::{Serialize, Deserialize};
     ///
-    /// #[derive(Serialize, Deserialize, Default)]
+    /// #[derive(Serialize, Deserialize, Default, Clone)]
     /// struct MyConfig {
     ///   name: String,
     ///   age: u8,
@@ -109,21 +114,20 @@ where
         #[cfg(feature = "tracing")]
         trace!("created empty config");
         Self {
-            config: RwLock::new(T::default()),
+            config: Lock::new(T::default()),
             path: None,
         }
     }
 
-    /// Access the `RwLock` of the config used to read and write the config.
+    /// Access the `Lock` of the config used to read and write the config.
     /// To save the config to file use the [`Config::save`] method.
     ///
     /// # Example
     /// ```
     /// use opzioni::Config;
     /// use serde::{Serialize, Deserialize};
-    /// use std::sync::RwLock;
     ///
-    /// #[derive(Serialize, Deserialize, Default)]
+    /// #[derive(Serialize, Deserialize, Default, Clone)]
     /// struct MyConfig {
     ///   name: String,
     ///   age: u8,
@@ -135,7 +139,7 @@ where
     /// config.name = "John".to_string();
     /// config.age = 42;
     /// ```
-    pub fn get(&self) -> &RwLock<T> {
+    pub fn get(&self) -> &Lock<T> {
         &self.config
     }
 
@@ -147,7 +151,7 @@ where
     /// use serde::{Serialize, Deserialize};
     /// use std::path::Path;
     ///
-    /// #[derive(Serialize, Deserialize, Default)]
+    /// #[derive(Serialize, Deserialize, Default, Clone)]
     /// struct MyConfig {
     ///   name: String,
     ///   age: u8,
@@ -174,7 +178,7 @@ where
     /// use serde::{Serialize, Deserialize};
     /// use std::path::Path;
     ///
-    /// #[derive(Serialize, Deserialize, Default)]
+    /// #[derive(Serialize, Deserialize, Default, Clone)]
     /// struct MyConfig {
     ///  name: String,
     ///  age: u8,
@@ -185,10 +189,52 @@ where
     /// config.get().write().unwrap().age = 42;
     /// config.save().unwrap();
     /// ```
+    #[cfg(not(feature = "tokio"))]
     pub fn save(&self) -> Result<(), Error> {
         match &self.path {
             Some(path) => match manager::for_file::<T>(path) {
                 Ok(loader) => loader.save(&self.config.read().unwrap()),
+                Err(err) => Err(err),
+            },
+            None => Err(Error::ConfigLoadError(None)),
+        }
+    }
+
+    /// Saves the config to file. The file extension of the config file determines the format of the config file.
+    /// The currently supported formats are JSON, TOML and YAML.
+    /// The config file is overwritten.
+    /// If the config file could not be saved, an error is returned.
+    /// If the config file was loaded from disk, the config is saved to the same file.
+    /// If the config file was created with [`Config::empty`], the method returns an error.
+    ///
+    /// # Example
+    /// ```
+    /// use opzioni::Config;
+    /// use serde::{Serialize, Deserialize};
+    /// use std::path::Path;
+    ///
+    /// #[derive(Serialize, Deserialize, Default, Clone)]
+    /// struct MyConfig {
+    ///  name: String,
+    ///  age: u8,
+    /// }
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// let config: Config<MyConfig> = Config::<MyConfig>::configure().load(Path::new("testconfig.json")).unwrap();
+    /// config.get().write().unwrap().name = "John".to_string();
+    /// config.get().write().unwrap().age = 42;
+    /// config.save().unwrap();
+    /// # }
+    /// ```
+    #[cfg(feature = "tokio")]
+    pub async fn save(&self) -> Result<(), Error> {
+        match &self.path {
+            Some(path) => match manager::for_file::<T>(path) {
+                Ok(loader) => {
+                    let cfg = self.config.read().await.clone();
+                    loader.save(&cfg)
+                }
                 Err(err) => Err(err),
             },
             None => Err(Error::ConfigLoadError(None)),
@@ -204,7 +250,7 @@ pub struct ConfigBuilder {
 impl ConfigBuilder {
     fn handle_load_err<T>(&self, err: Error, path: &Path) -> Result<Config<T>, Error>
     where
-        T: serde::Serialize + serde::de::DeserializeOwned + Default,
+        T: serde::Serialize + serde::de::DeserializeOwned + Default + Clone + Send + Sync,
     {
         if !self.use_default_on_error {
             return Err(err);
@@ -215,7 +261,7 @@ impl ConfigBuilder {
             "using default config because of error"
         );
         return Ok(Config {
-            config: RwLock::new(T::default()),
+            config: Lock::new(T::default()),
             path: Some(path.to_path_buf()),
         });
     }
@@ -229,7 +275,7 @@ impl ConfigBuilder {
     /// use serde::{Serialize, Deserialize};
     /// use std::path::Path;
     ///
-    /// #[derive(Serialize, Deserialize)]
+    /// #[derive(Serialize, Deserialize, Clone)]
     /// struct MyConfig {
     ///   name: String,
     ///   age: u8,
@@ -262,7 +308,7 @@ impl ConfigBuilder {
     /// use serde::{Serialize, Deserialize};
     /// use std::path::Path;
     ///
-    /// #[derive(Serialize, Deserialize, Default)]
+    /// #[derive(Serialize, Deserialize, Default, Clone)]
     /// struct MyConfig {
     ///    name: String,
     ///    age: u8,
@@ -272,12 +318,12 @@ impl ConfigBuilder {
     /// ```
     pub fn load<T>(&mut self, path: &Path) -> Result<Config<T>, Error>
     where
-        T: serde::Serialize + serde::de::DeserializeOwned + Default,
+        T: serde::Serialize + serde::de::DeserializeOwned + Default + Clone + Send + Sync,
     {
         match manager::for_file(path) {
             Ok(loader) => match loader.load() {
                 Ok(config) => Ok(Config {
-                    config: RwLock::new(config),
+                    config: Lock::new(config),
                     path: Some(path.to_path_buf()),
                 }),
                 Err(err) => self.handle_load_err(err, &path),
