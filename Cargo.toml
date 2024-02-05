@@ -1,6 +1,6 @@
 [package]
 name = "opzioni"
-version = "2.0.0"
+version = "3.0.0"
 edition = "2021"
 authors = ["Aurelio Buonomo"]
 description = "A slim and fast configuration library for Rust"
@@ -16,8 +16,11 @@ serde = { version = "1.0.130", features = ["derive"] }
 serde_json = { version = "1.0.64", optional = true }
 serde_yaml = { version = "0.9.21", optional = true }
 tracing = { version = "0.1.37", optional = true }
-toml = { version = "0.7.3", optional = true }
-tokio = { version = "1.28.2", optional = true, features = ["sync"] }
+toml = { version = "0.8.9", optional = true }
+tokio = { version = "1.36.0", optional = true, features = ["sync"] }
+
+[dev-dependencies]
+tokio = { version = "1.36.0", features = ["sync", "macros", "rt-multi-thread"] }
 
 [features]
 default = ["all"]

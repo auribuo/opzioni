@@ -3,8 +3,8 @@ use std::path::Path;
 use crate::Error;
 
 pub(crate) fn for_file<T>(path: &Path) -> Result<Box<dyn ConfigManager<T>>, Error>
-where
-    T: serde::Serialize + serde::de::DeserializeOwned + Default,
+    where
+        T: serde::Serialize + serde::de::DeserializeOwned + Default,
 {
     match path.extension() {
         Some(ext) => match ext.to_str() {
@@ -14,17 +14,18 @@ where
             Some("toml") => Ok(Box::new(toml::TomlLoader::new(path))),
             #[cfg(feature = "yaml")]
             Some("yaml") | Some("yml") => Ok(Box::new(yaml::YamlLoader::new(path))),
-            _ => Err(Error::UnknownFileExtension(Some(
-                ext.to_str().unwrap().to_string(),
+            Some(ext) => Err(Error::UnknownFileExtension(Some(
+                ext.to_string(),
             ))),
+            None => Err(Error::UnknownFileExtension(None))
         },
         None => Err(Error::UnknownFileExtension(None)),
     }
 }
 
 pub(crate) trait ConfigManager<T>
-where
-    T: serde::Serialize + serde::de::DeserializeOwned + Default,
+    where
+        T: serde::Serialize + serde::de::DeserializeOwned + Default,
 {
     fn load(&self) -> Result<T, Error>;
     fn save(&self, config: &T) -> Result<(), Error>;
@@ -45,8 +46,8 @@ mod json {
     }
 
     impl<T> super::ConfigManager<T> for JsonLoader
-    where
-        T: serde::Serialize + serde::de::DeserializeOwned + Default,
+        where
+            T: serde::Serialize + serde::de::DeserializeOwned + Default,
     {
         fn load(&self) -> Result<T, super::Error> {
             #[cfg(feature = "tracing")]
@@ -85,8 +86,8 @@ mod toml {
     }
 
     impl<T> super::ConfigManager<T> for TomlLoader
-    where
-        T: serde::Serialize + serde::de::DeserializeOwned + Default,
+        where
+            T: serde::Serialize + serde::de::DeserializeOwned + Default,
     {
         fn load(&self) -> Result<T, super::Error> {
             #[cfg(feature = "tracing")]
@@ -125,8 +126,8 @@ mod yaml {
     }
 
     impl<T> super::ConfigManager<T> for YamlLoader
-    where
-        T: serde::Serialize + serde::de::DeserializeOwned + Default,
+        where
+            T: serde::Serialize + serde::de::DeserializeOwned + Default,
     {
         fn load(&self) -> Result<T, super::Error> {
             #[cfg(feature = "tracing")]
