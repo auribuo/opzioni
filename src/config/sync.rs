@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::path;
 use std::path::{Path, PathBuf};
 use crate::{Error, Lock, manager};
@@ -7,7 +8,7 @@ use crate::manager::ConfigManager;
 pub struct Config<T>
     where T: serde::ser::Serialize + serde::de::DeserializeOwned + Default + Clone + Send + Sync {
     pub(crate) config: Lock<T>,
-    pub(crate) path: Option<path::PathBuf>,
+    pub(crate) path: Option<PathBuf>,
 }
 
 impl<T> Config<T>
@@ -79,6 +80,7 @@ impl<T> Config<T>
     /// ```
     pub fn configure() -> ConfigBuilder<T> {
         ConfigBuilder {
+            _p: PhantomData,
             use_default_on_error: false,
         }
     }
@@ -136,6 +138,7 @@ impl<T> Default for Config<T>
 
 /// The ConfigBuilder struct is used to load a config file from disk. See [`ConfigBuilder::load`] for more information.
 pub struct ConfigBuilder<T> where T: serde::ser::Serialize + serde::de::DeserializeOwned + Default + Clone + Send + Sync {
+    _p: PhantomData<T>,
     use_default_on_error: bool,
 }
 
